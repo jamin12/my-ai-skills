@@ -70,7 +70,7 @@ argument-hint: "[branch-name] [--base=branch] | --remove [branch-name]"
 
 6. **iTerm2 새 탭에서 claude 실행**:
    ```bash
-   ~/.claude/skills/worktree/scripts/open-iterm.sh "$WORKTREE_PATH"
+   ~/.claude/skills/cmux-worktree/scripts/open-iterm.sh "$WORKTREE_PATH"
    ```
 
 7. **결과 보고**: worktree 경로, 브랜치 이름, 기반 브랜치를 사용자에게 알려줍니다.
