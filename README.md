@@ -1,47 +1,60 @@
 # my-claude-skills
 
-개인용 Claude Code 스킬 모음. 여러 프로젝트·여러 컴퓨터에서 공통으로 사용한다. [Vercel agent-skills CLI](https://github.com/vercel-labs/skills)로 설치/업데이트한다.
+개인용 Claude Code 스킬 저장소. 여러 프로젝트·여러 컴퓨터에서 같은 스킬을 심볼릭 링크 기반으로 공유한다. 외부 CLI 의존 없이 `npx` 로 직접 실행되는 얇은 Node.js 스크립트(`bin/my-skills.mjs`) 하나로 설치/업데이트를 관리한다.
+
+## 동작 원리
+
+1. `npx github:jamin12/my-claude-skills install ...` 실행
+2. `bin/my-skills.mjs` 가 `~/.my-claude-skills` 에 repo 를 clone (또는 기존 clone 을 `git pull`)
+3. `~/.my-claude-skills/skills/<name>` → `~/.claude/skills/<name>` (또는 `./.claude/skills/<name>`) 심볼릭 링크 생성
+4. 이후 스킬 수정은 `~/.my-claude-skills` 에서만 하고 `git push`
+5. 다른 컴퓨터에서는 `npx github:jamin12/my-claude-skills update` 한 줄로 모든 설치가 즉시 최신 상태
+
+Node.js 외 다른 런타임·CLI 가 필요하지 않다. 심볼릭 링크라서 `update` 후 재설치도 필요 없다.
 
 ## 설치
 
-### 전제
-
-- Node.js (npx 사용)
-- SSH 또는 HTTPS로 이 repo 접근 가능
-
-### 새 컴퓨터 최초 세팅 (글로벌 스킬만)
-
-어떤 프로젝트에서도 활성화될 범용 스킬들을 `~/.claude/skills/` 에 설치한다.
+### 새 컴퓨터 세팅 (글로벌)
 
 ```bash
-npx skills add github:jamin12/my-claude-skills -g
+# 전부 설치
+npx -y github:jamin12/my-claude-skills install
+
+# 일부만 설치
+npx -y github:jamin12/my-claude-skills install spec-setup cmux-worktree
 ```
 
-설치 후 원하는 스킬만 선택적으로 남기고 나머지는 `npx skills remove -g <name>` 으로 제거해도 된다.
+`~/.claude/skills/` 아래에 심볼릭 링크가 생성된다. 원본은 `~/.my-claude-skills/skills/` 에 있다.
 
-### 프로젝트에 Kotlin/Spring 스킬 설치
+### Kotlin/Spring 프로젝트에 설치
 
-Kotlin + Spring Boot + 헥사고날 아키텍처 프로젝트의 `.claude/skills/` 에 설치한다. 프로젝트 루트에서:
-
-```bash
-cd <your-kotlin-project>
-npx skills add github:jamin12/my-claude-skills
-```
-
-(스킬 단위로 선택 설치하려면 CLI의 `--include` / 대화형 선택을 사용)
-
-### 업데이트 (모든 컴퓨터 공통)
+프로젝트 루트에서 `--project` 플래그로 로컬 설치:
 
 ```bash
-# 글로벌 스킬 업데이트
-npx skills update -g
-
-# 프로젝트 스킬 업데이트
 cd <your-project>
-npx skills update
+npx -y github:jamin12/my-claude-skills install --project \
+  domain-model jpa-entity rest-controller usecase \
+  setup-gradle mapper testing architecture code-convention ai-memory-plan
 ```
 
-심볼릭 링크 모드로 설치되어 있으면 캐노니컬 위치만 갱신되므로, 여러 프로젝트가 같은 스킬을 공유하는 경우에도 한 번의 update로 전체 반영된다.
+`./.claude/skills/` 아래에 심볼릭 링크가 생성된다.
+
+## 명령어
+
+```bash
+# 업데이트 (모든 컴퓨터 공통)
+npx -y github:jamin12/my-claude-skills update
+
+# 설치된 스킬 확인
+npx -y github:jamin12/my-claude-skills list
+npx -y github:jamin12/my-claude-skills list --project
+
+# 제거
+npx -y github:jamin12/my-claude-skills remove spec-setup
+npx -y github:jamin12/my-claude-skills remove --project usecase
+```
+
+`update` 는 `~/.my-claude-skills` 를 `git pull` 한 번 하는 것. 심볼릭 링크가 새 파일 내용을 자동으로 가리킨다.
 
 ## 스킬 목록
 
@@ -69,6 +82,11 @@ npx skills update
 
 ## 규칙
 
-- **수정은 이 repo에서만 한다.** 설치된 각 프로젝트의 `.claude/skills/` 는 심볼릭 링크이므로, 해당 위치에서 수정하면 모든 프로젝트에 즉시 반영된다. 수정 후 `git push` → 다른 컴퓨터에서 `npx skills update -g` (또는 프로젝트별).
-- **새 스킬 추가** 시 이 README의 스킬 목록에도 한 줄 추가한다. 스킬 파일은 `skills/<name>/SKILL.md` 구조를 따른다.
-- **스킬 작성 포맷**은 `skills/code-convention` 같은 기존 스킬을 참고한다. YAML frontmatter(`name`, `description`) + 본문.
+- **수정은 `~/.my-claude-skills` 에서만 한다.** 설치된 각 프로젝트의 `.claude/skills/` 는 심볼릭 링크이므로, 그 경로에서 편집하면 원본도 바뀐다 (편의성). 단 편집 후 반드시 `~/.my-claude-skills` 에서 `git add/commit/push` 해야 다른 컴퓨터에 전파된다.
+- **새 스킬 추가** 시 `skills/<name>/SKILL.md` 구조를 따르고 이 README 의 스킬 목록에도 한 줄 추가한다.
+- **스킬 작성 포맷**은 `skills/code-convention` 같은 기존 스킬을 참고한다. YAML frontmatter 에 `name` + `description` 필드가 있어야 한다.
+
+## 제약
+
+- Node.js 18 이상 필요 (npx 포함)
+- Windows 의 심볼릭 링크 생성은 관리자 권한 또는 Developer Mode 필요
