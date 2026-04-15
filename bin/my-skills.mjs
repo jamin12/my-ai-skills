@@ -126,12 +126,45 @@ function list(scope) {
 }
 
 function remove(scope, names) {
-  if (names.length === 0) {
-    console.error("✗ 제거할 스킬 이름이 필요합니다.");
+  const wantAll = names.includes("--all");
+  const explicitNames = names.filter((n) => n !== "--all");
+
+  if (!wantAll && explicitNames.length === 0) {
+    console.error("✗ 제거할 스킬 이름이 필요합니다 (또는 --all 로 관리 대상 전체 제거).");
     process.exit(1);
   }
+
   const dest = targetDir(scope);
-  for (const name of names) {
+  let targets;
+
+  if (wantAll) {
+    if (!existsSync(dest)) {
+      console.log("(아무것도 설치되지 않음)");
+      return;
+    }
+    targets = readdirSync(dest)
+      .filter((n) => !n.startsWith("."))
+      .filter((n) => {
+        const p = join(dest, n);
+        try {
+          const st = lstatSync(p);
+          if (!st.isSymbolicLink()) return false;
+          const target = readlinkSync(p);
+          return target.startsWith(CLONE_DIR);
+        } catch {
+          return false;
+        }
+      });
+    if (targets.length === 0) {
+      console.log("(관리 대상인 스킬이 없음)");
+      return;
+    }
+    console.log(`→ my-claude-skills 관리 대상 ${targets.length}개 제거: ${targets.join(", ")}`);
+  } else {
+    targets = explicitNames;
+  }
+
+  for (const name of targets) {
     const p = join(dest, name);
     if (!lstatExists(p)) {
       console.warn(`⚠ ${name}: 설치되지 않음`);
@@ -168,6 +201,8 @@ function usage() {
       # 인수 없음 또는 --all 이면 모든 스킬 설치
   npx -y github:jamin12/my-claude-skills list [--project]
   npx -y github:jamin12/my-claude-skills remove <skill...> [--project]
+  npx -y github:jamin12/my-claude-skills remove --all [--project]
+      # my-claude-skills 로 관리되는 심볼릭 링크 전체 제거 (다른 스킬은 건드리지 않음)
   npx -y github:jamin12/my-claude-skills update
 
 기본 스코프는 ~/.claude/skills/ (글로벌).
