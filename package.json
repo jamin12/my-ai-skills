@@ -1,10 +1,10 @@
 {
-  "name": "my-claude-skills",
+  "name": "my-ai-skills",
   "version": "1.0.0",
-  "description": "개인 Claude/Codex 스킬 저장소. npx 로 설치/업데이트한다.",
+  "description": "개인 AI 스킬 저장소. Claude/Codex에서 공용으로 사용한다.",
   "type": "module",
   "bin": {
-    "my-claude-skills": "./bin/my-skills.mjs"
+    "my-ai-skills": "./bin/my-skills.mjs"
   },
   "license": "UNLICENSED",
   "engines": {

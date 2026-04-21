@@ -15,8 +15,8 @@ import { homedir } from "node:os";
 import { basename, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const REPO_URL = "https://github.com/jamin12/my-claude-skills.git";
-const CLONE_DIR = join(homedir(), ".my-claude-skills");
+const REPO_URL = "https://github.com/jamin12/my-ai-skills.git";
+const CLONE_DIR = join(homedir(), ".my-ai-skills");
 const BUNDLES_FILE = "bundles.json";
 const PACKAGE_ROOT_DIR = fileURLToPath(new URL("..", import.meta.url));
 const TARGETS = {
@@ -277,7 +277,7 @@ async function install(target, names, targetExplicit) {
 }
 
 async function interactiveInstall(defaultTarget, targetExplicit, available) {
-  clack.intro("my-claude-skills: 인터랙티브 설치");
+  clack.intro("my-ai-skills: 인터랙티브 설치");
   const skillMap = getSkillEntryMap();
   const categoryMap = buildCategoryMap(skillMap);
 
@@ -311,6 +311,7 @@ async function interactiveInstall(defaultTarget, targetExplicit, available) {
         hint: skill ? `${categoryLabel(skillCategoryOf(skill))} / ${skill.relativeDir}` : undefined,
       };
     }),
+    initialValues: selectedSkills,
     required: true,
   });
 
@@ -382,7 +383,7 @@ function list(target) {
       console.log(`    ${name}  (local, not managed)`);
     }
   }
-  console.log("\n● = my-claude-skills 로 관리됨, ○ = 다른 경로 심볼릭 링크, (local) = 관리 대상 아님");
+  console.log("\n● = my-ai-skills 로 관리됨, ○ = 다른 경로 심볼릭 링크, (local) = 관리 대상 아님");
 }
 
 function remove(target, names) {
@@ -422,7 +423,7 @@ function remove(target, names) {
       console.log("(관리 대상인 스킬이 없음)");
       return;
     }
-    console.log(`→ my-claude-skills 관리 대상 ${targets.length}개 제거: ${targets.join(", ")}`);
+    console.log(`→ my-ai-skills 관리 대상 ${targets.length}개 제거: ${targets.join(", ")}`);
   } else {
     targets = expandNames(explicitNames, available, bundles);
   }
@@ -536,25 +537,25 @@ function parseArgs(argv) {
 
 function usage() {
   console.log(`사용법:
-  npx -y github:jamin12/my-claude-skills install [skill...] [--claude|--codex] [--global|--project|--user]
-  npx -y github:jamin12/my-claude-skills install [skill...] --target <target>
+  npx -y github:jamin12/my-ai-skills install [skill...] [--claude|--codex] [--global|--project|--user]
+  npx -y github:jamin12/my-ai-skills install [skill...] --target <target>
       # 번들은 @backend 같은 형태로 지정
       # 인수 없음 또는 --all 이면 모든 스킬 설치
-  npx -y github:jamin12/my-claude-skills list [--claude|--codex] [--global|--project|--user]
-  npx -y github:jamin12/my-claude-skills list --target <target>
-  npx -y github:jamin12/my-claude-skills remove <skill...> [--claude|--codex] [--global|--project|--user]
-  npx -y github:jamin12/my-claude-skills remove <skill...> --target <target>
-  npx -y github:jamin12/my-claude-skills remove --all [--claude|--codex] [--global|--project|--user]
-      # my-claude-skills 로 관리되는 심볼릭 링크 전체 제거 (다른 스킬은 건드리지 않음)
-  npx -y github:jamin12/my-claude-skills bundles
-  npx -y github:jamin12/my-claude-skills update
+  npx -y github:jamin12/my-ai-skills list [--claude|--codex] [--global|--project|--user]
+  npx -y github:jamin12/my-ai-skills list --target <target>
+  npx -y github:jamin12/my-ai-skills remove <skill...> [--claude|--codex] [--global|--project|--user]
+  npx -y github:jamin12/my-ai-skills remove <skill...> --target <target>
+  npx -y github:jamin12/my-ai-skills remove --all [--claude|--codex] [--global|--project|--user]
+      # my-ai-skills 로 관리되는 심볼릭 링크 전체 제거 (다른 스킬은 건드리지 않음)
+  npx -y github:jamin12/my-ai-skills bundles
+  npx -y github:jamin12/my-ai-skills update
 
 기본 타깃은 Claude global (~/.claude/skills/).
 기존 호환: --project 만 주면 Claude project (./.claude/skills/).
 Codex 사용자 스킬: --codex --global 또는 --codex --user → ~/.agents/skills/
 Codex 프로젝트 스킬: --codex --project → ./.agents/skills/
 직접 target 지정: ${Object.keys(TARGETS).join(", ")}
-update 는 ~/.my-claude-skills 를 git pull 해서 모든 설치된 링크가 즉시 반영됨.
+update 는 ~/.my-ai-skills 를 git pull 해서 모든 설치된 링크가 즉시 반영됨.
 `);
 }
 
