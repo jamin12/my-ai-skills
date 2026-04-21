@@ -282,7 +282,7 @@ async function interactiveInstall(defaultTarget, targetExplicit, available) {
   const categoryMap = buildCategoryMap(skillMap);
 
   const pickedCategories = await clack.multiselect({
-    message: "설치할 카테고리를 선택하세요 (space: 토글, enter: 확정)",
+    message: "기본 선택할 카테고리를 고르세요 (다음 단계에서 전체 스킬을 다시 볼 수 있음)",
     options: [...categoryMap.entries()].map(([category, skills]) => ({
       value: category,
       label: categoryLabel(category),
@@ -300,17 +300,15 @@ async function interactiveInstall(defaultTarget, targetExplicit, available) {
     const skill = skillMap.get(name);
     return skill && pickedCategories.includes(skillCategoryOf(skill));
   });
+  const allSkillOptions = [...categoryMap.values()].flat().map((skill) => ({
+    value: skill.name,
+    label: skill.name,
+    hint: `${categoryLabel(skillCategoryOf(skill))} / ${skill.relativeDir}`,
+  }));
 
   const selected = await clack.multiselect({
-    message: "설치할 스킬을 선택하세요 (space: 토글, enter: 확정)",
-    options: selectedSkills.map((name) => {
-      const skill = skillMap.get(name);
-      return {
-        value: name,
-        label: name,
-        hint: skill ? `${categoryLabel(skillCategoryOf(skill))} / ${skill.relativeDir}` : undefined,
-      };
-    }),
+    message: "설치할 스킬을 선택하세요 (선택한 카테고리는 기본 체크되어 있고, 다른 카테고리도 여기서 추가 가능)",
+    options: allSkillOptions,
     initialValues: selectedSkills,
     required: true,
   });
