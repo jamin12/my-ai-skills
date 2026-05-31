@@ -189,7 +189,33 @@ value class StockCode(val value: String) {
 
 - **위치**: `domain/{도메인}/vo/` 패키지
 - **단일 값 VO**: 반드시 `@JvmInline value class` 사용 (data class 금지)
+- **멀티필드 VO**: `data class` + **public 생성자 + `init` 검증** (private constructor + factory 금지)
 - **검증**: VO 생성 시점에 `init` 블록으로 유효성 보장
+
+#### 멀티필드 VO에 private constructor + factory를 쓰지 않는 이유
+
+`data class`는 private constructor를 둬도 `copy()`가 생성돼 팩토리(`of`)를 우회한다. 다만 `copy()`도 primary constructor를 호출하므로 **`init` 검증은 항상 재실행**되어 불변식은 못 뚫린다 — 즉 private constructor가 막는 건 "팩토리 강제"뿐인데, 그 강제는 *엔티티*(식별자·라이프사이클 통제) 규칙이지 VO 규칙이 아니다. VO는 값 자체가 정체성이라 `copy()`로 또 다른 유효한 값이 나오는 건 누수가 아니라 정상이다. 따라서 멀티필드 VO는 단일 값 VO(`InviteCode`·`Nickname`)와 동일하게 **public 생성자 + `init`** 으로 통일한다.
+
+```kotlin
+// CORRECT - public 생성자 + init 검증 (copy()도 init 재실행 → 불변식 보장)
+data class Category(
+    val type: CategoryType,
+    val customLabel: String? = null,
+) {
+    init {
+        if (type == CategoryType.ETC) {
+            require(!customLabel.isNullOrBlank()) { "기타 카테고리는 직접 입력 값이 필요합니다" }
+        } else {
+            require(customLabel == null) { "사전 카테고리에는 직접 입력 값을 둘 수 없습니다" }
+        }
+    }
+}
+
+// WRONG - VO에 엔티티 규칙(private constructor + factory)을 끌어다 씀
+data class Category private constructor(...) {   // copy()로 of() 우회 가능 + 군더더기
+    companion object { fun of(...) = Category(...) }
+}
+```
 
 ## 체크리스트
 - [ ] private constructor를 사용하는가?
@@ -202,3 +228,4 @@ value class StockCode(val value: String) {
 - [ ] Spring/JPA 어노테이션이 없는가?
 - [ ] ID 타입이 @JvmInline value class VO로 래핑되어 있는가?
 - [ ] VO가 domain/{도메인}/vo/ 패키지에 있는가?
+- [ ] 멀티필드 VO(data class)가 public 생성자 + init 검증인가? (private constructor + factory 금지)
