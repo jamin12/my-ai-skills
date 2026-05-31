@@ -92,6 +92,24 @@ class TriggerAlertUseCase(
 - 네이밍: `{동사}{도메인}UseCase` (예: `CreateAlertUseCase`, `FindAlertUseCase`)
 - InPort 구현: 반드시 해당 InPort 인터페이스를 implements
 
+### 규칙 6: 사용자 도달 가능 검증은 UseCase에서 코드 예외로 선처리
+
+도메인의 `require`(= `IllegalArgumentException`)는 전역 핸들러에서 일반 오류(500급→4xx)로 떨어져 친절한 코드/메시지가 안 나간다. 사용자가 닿을 수 있는 실패 조건은 **UseCase에서 먼저 검사**해 코드 예외(`BaseRuntimeException` + 도메인 `ResponseCode`)로 던지고, 도메인 `require`는 최후 방어선으로 남긴다.
+
+```kotlin
+override fun execute(command: AcceptInviteCommand): PairedCoupleResult {
+    val invite = pairingInviteOutPort.findByCode(...) ?: throw InviteNotUsableException(...)   // 409
+    if (!invite.usable(now)) throw InviteNotUsableException(...)            // 409 — 도메인 require 전에 선검증
+    if (invite.inviterId == command.joinerId) throw CannotPairSelfException()  // 400
+    if (coupleOutPort.existsByMemberId(command.joinerId)) throw AlreadyPairedException(...)  // 409
+    ...
+    invite.accept(command.joinerId, now)   // 도메인 require는 여기서 백스톱일 뿐
+}
+```
+
+- 같은 검증이 UseCase·도메인 양쪽에 있는 건 중복이 아니라 역할 분담 — 앞단은 UX(코드/메시지), 도메인은 불변식 보호.
+- 단, **구조적으로 도달 불가능한 순수 불변식**까지 UseCase에 복붙하지 않는다(과함). 도메인 측 처리 기준은 `domain-model` 스킬 "도메인 검증 실패" 규칙 참조.
+
 ---
 
 ## Application DTO 규칙
