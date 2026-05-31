@@ -31,6 +31,12 @@ class Alert(...)
 - **테이블**: `@Table(name = "...", comment = "테이블 설명")`
 - **컬럼**: `@Column(comment = "컬럼 설명")`
 
+> **Flyway(또는 다른 마이그레이션 도구)를 쓴다면**: 마이그레이션 SQL 주석에는 enum 값을 나열하지 않는다.
+> 마이그레이션은 적용되면 checksum 이 고정되는 불변 아티팩트라, 주석에 `PENDING | LIVE | CLOSED` 같은 값을 박으면
+> enum 이 바뀔 때마다 이미 적용된 파일을 다시 고쳐야 한다(checksum 깨짐). 값의 source of truth 는 도메인 enum/엔티티이고,
+> 마이그레이션 컬럼 주석은 `'다툼 진행 상태 (값 정의는 DebateStatus enum)'` 처럼 일반화한다.
+> (엔티티 `@Column(comment=)` 은 코드라 값 변화에 함께 바뀌어도 무방 — 이 제약은 마이그레이션에만 적용)
+
 ## 규칙 4: Entity 필드는 `var` + `protected set`, 저장은 merge
 
 도메인이 id(UUID v7)를 미리 생성하므로 `@GeneratedValue` 를 쓰지 않는다. 기본형은 **평범한 엔티티 + 단일 save(merge)** 이다.
